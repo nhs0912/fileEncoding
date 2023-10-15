@@ -1,0 +1,39 @@
+spring:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:~/test
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+  integration:
+      management:
+        default-logging-enabled: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+#      location: /Users/heeseoknoh/Documents/workspace/saveFile/
+
+
+logging:
+    level:
+      org.hibernate.SQL: error
+      org.hibernate.type: error
+      org.springframework.boot.autoconfigure: error
+      org.apache.coyote.http11: debug
+
+file:
+  dir: /Users/heeseoknoh/Documents/workspace/saveFile/
