@@ -10,5 +10,6 @@ public class Item {
     private String saveName;
     private String originalName;
     private List<UploadFile> files;
+    private List<UploadFile> eucKrFiles;
     private String clientIp;
 }

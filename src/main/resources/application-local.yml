@@ -23,8 +23,8 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 20MB
+      max-request-size: 100MB
 #      location: /Users/heeseoknoh/Documents/workspace/saveFile/
 
 
@@ -36,4 +36,5 @@ logging:
       org.apache.coyote.http11: debug
 
 file:
-  dir: /Users/heeseoknoh/Documents/workspace/saveFile/
+#  dir: /Users/heeseoknoh/Documents/workspace/saveFile/
+    dir: C:\Users\HeeSeok\Documents\saveFile\

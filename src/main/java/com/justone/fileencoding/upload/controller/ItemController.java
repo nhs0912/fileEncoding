@@ -18,10 +18,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriUtils;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 
 @Slf4j
 @Controller
@@ -42,11 +44,13 @@ public class ItemController {
 
         log.info("form = {}", form);
         List<UploadFile> storeFiles = fileStoreService.storeFiles(form.getFiles());
+//        List<UploadFile> storeEucKrFiles = fileStoreService.storeFiles(form.getFiles());
         String myIp = request.getRemoteAddr();
         log.info("myIp = {}", myIp);
         //db 저장
         Item item = new Item();
         item.setFiles(storeFiles);
+//        item.setFiles(storeEucKrFiles);
         item.setClientIp(myIp);
         itemRepository.save(item);
         redirectAttributes.addAttribute("itemId", item.getId());
@@ -73,6 +77,53 @@ public class ItemController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
                 .body(urlResource);
     }
+
+    @GetMapping("/attach/{id}/{fileName}/euckr")
+    public ResponseEntity<Resource> downloadUTF8ToEucKrAttach(@PathVariable Long id, @PathVariable String fileName) throws IOException {
+        String eucKrFileName = "euc_kr_" + fileName;
+        String eucKrFullPath = fileStoreService.getFullPath(eucKrFileName);
+        String originalFullPath = fileStoreService.getFullPath(fileName);
+        UrlResource urlResource = new UrlResource("file:" + eucKrFullPath);
+        changeUTF8EncodingFile(originalFullPath, fileName);
+
+        String originalName = findOriginalName(id, fileName);
+        String encodeUploadFileName = UriUtils.encode(originalName, "UTF-8");
+
+        String contentDisposition = "attachment; fileName = \"" + "eucKr_"+ encodeUploadFileName + "\"";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+                .body(urlResource);
+    }
+
+    private void changeUTF8EncodingFile(String saveFileFullPath, String fileName) throws IOException {
+        String eucKrFileName = "euc_kr_" + fileName;
+        String eucKrFullPath = fileStoreService.getFullPath(eucKrFileName); //euc_kr 변환파일 저장 경로
+
+        //원본 파일 경로
+        File file = new File(saveFileFullPath);
+        FileInputStream inputStream = new FileInputStream(file);
+
+        //UTF-8 to EUC-KR
+        byte[] bytes = inputStream.readAllBytes();
+
+        for (byte aByte : bytes) {
+            log.info(aByte+" ");
+        }
+        //UTF-8로 decode한다.
+        String beforeConvertedText = new String(bytes, StandardCharsets.UTF_8);
+        String afterConvertedText = new String(beforeConvertedText.getBytes(Charset.forName("EUC-KR")), Charset.forName("EUC-KR"));
+        log.info("beforeConvertedText = {}", beforeConvertedText);
+        log.info("afterConvertedText = {}", afterConvertedText);
+        log.info("eucKr = {}" , Charset.forName("EUC-KR"));
+        File outputFile = new File(eucKrFullPath);
+        Writer writer = new OutputStreamWriter(new FileOutputStream(outputFile), Charset.forName("EUC-KR"));
+//        log.info("encoding 검사 outputFile: {}" , FileEncodingDe);
+
+        writer.write(afterConvertedText);
+        writer.close();
+
+    }
+
 
     private String findOriginalName(Long id, String fileName) {
         Item item = itemRepository.findById(id);
