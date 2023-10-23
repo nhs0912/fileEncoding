@@ -20,12 +20,12 @@
         </tr>
         <tr th:each="file : ${item.getFiles()}">
             <td>
-            <a th:href="|/attach/${item.id}/${file.getSaveName()}|"
-                  th:text="${file.getOriginalName()}"/>
+            <a th:href="|/attach/${item.id}/${file.fullOriginalFileName()}|"
+                  th:text="${file.fullOriginalFileName()}"/>
             </td>
             <td>
-                <a th:href="|/attach/${item.id}/${file.getSaveName()}/euckr|"
-                   th:text="${file.getOriginalName()}" />
+                <a th:href="|/attach/${item.id}/${file.fullSaveFileName()}/euckr|"
+                   th:text="${file.changeEucKrFileName()}" />
             </td>
         </tr>
     </table>

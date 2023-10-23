@@ -80,8 +80,7 @@ public class ItemController {
 
     @GetMapping("/attach/{id}/{fileName}/euckr")
     public ResponseEntity<Resource> downloadUTF8ToEucKrAttach(@PathVariable Long id, @PathVariable String fileName) throws IOException {
-        String eucKrFileName = "euc_kr_" + fileName;
-        String eucKrFullPath = fileStoreService.getFullPath(eucKrFileName);
+        String eucKrFullPath = fileStoreService.getFullPath(fileName);
         String originalFullPath = fileStoreService.getFullPath(fileName);
         UrlResource urlResource = new UrlResource("file:" + eucKrFullPath);
         changeUTF8EncodingFile(originalFullPath, fileName);
@@ -89,15 +88,15 @@ public class ItemController {
         String originalName = findOriginalName(id, fileName);
         String encodeUploadFileName = UriUtils.encode(originalName, "UTF-8");
 
-        String contentDisposition = "attachment; fileName = \"" + "eucKr_"+ encodeUploadFileName + "\"";
+        String contentDisposition = "attachment; fileName = \"" + encodeUploadFileName + "\"";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
                 .body(urlResource);
     }
 
     private void changeUTF8EncodingFile(String saveFileFullPath, String fileName) throws IOException {
-        String eucKrFileName = "euc_kr_" + fileName;
-        String eucKrFullPath = fileStoreService.getFullPath(eucKrFileName); //euc_kr 변환파일 저장 경로
+
+        String eucKrFullPath = fileStoreService.getFullPath(fileName); //euc_kr 변환파일 저장 경로
 
         //원본 파일 경로
         File file = new File(saveFileFullPath);
@@ -129,8 +128,8 @@ public class ItemController {
         Item item = itemRepository.findById(id);
         List<UploadFile> uploadFiles = item.getFiles();
         for (UploadFile uploadFile : uploadFiles) {
-            if (uploadFile.getSaveName().equals(fileName)) {
-                return uploadFile.getOriginalName();
+            if (uploadFile.fullSaveFileName().equals(fileName)) {
+                return uploadFile.fullOriginalFileName();
             }
         }
         throw new IllegalArgumentException("파일 이름이 잘못되었습니다.");
