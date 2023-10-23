@@ -2,15 +2,13 @@ package com.justone.fileencoding.upload.service;
 
 import com.justone.fileencoding.upload.domain.UploadFile;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.boot.model.naming.IllegalIdentifierException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.thymeleaf.util.StringUtils;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -70,11 +68,17 @@ public class FileStoreService {
 
     private String extractFileExtension(String originalName) {
         int position = originalName.lastIndexOf(".");
+        if (position == -1) {
+            return originalName;
+        }
         return originalName.substring(position + 1);
     }
 
     private String extractOriginalFileName(String originalName) {
         int position = originalName.lastIndexOf(".");
+        if (position == -1) {
+            return originalName;
+        }
         return originalName.substring(0, position);
     }
 

@@ -14,7 +14,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriUtils;
 
@@ -23,7 +26,6 @@ import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Locale;
 
 @Slf4j
 @Controller
@@ -43,6 +45,7 @@ public class ItemController {
                            HttpServletRequest request) throws IOException {
 
         log.info("form = {}", form);
+        log.info("form.getFiles = {}", form.getFiles());
         List<UploadFile> storeFiles = fileStoreService.storeFiles(form.getFiles());
 //        List<UploadFile> storeEucKrFiles = fileStoreService.storeFiles(form.getFiles());
         String myIp = request.getRemoteAddr();
@@ -70,8 +73,9 @@ public class ItemController {
     public ResponseEntity<Resource> downloadAttach(@PathVariable Long id, @PathVariable String fileName) throws MalformedURLException {
         UrlResource urlResource = new UrlResource("file:" + fileStoreService.getFullPath(fileName));
 
-        String originalName = findOriginalName(id, fileName);
-        String encodeUploadFileName = UriUtils.encode(originalName, StandardCharsets.UTF_8);
+        UploadFile originalFile = findUploadFile(id, fileName);
+        String encodeUploadFileName = UriUtils.encode(originalFile.getSaveName(), StandardCharsets.UTF_8);
+
         String contentDisposition = "attachment; fileName = \"" + encodeUploadFileName + "\"";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
@@ -80,13 +84,13 @@ public class ItemController {
 
     @GetMapping("/attach/{id}/{fileName}/euckr")
     public ResponseEntity<Resource> downloadUTF8ToEucKrAttach(@PathVariable Long id, @PathVariable String fileName) throws IOException {
-        String eucKrFullPath = fileStoreService.getFullPath(fileName);
         String originalFullPath = fileStoreService.getFullPath(fileName);
-        UrlResource urlResource = new UrlResource("file:" + eucKrFullPath);
-        changeUTF8EncodingFile(originalFullPath, fileName);
+        UploadFile uploadFile = findUploadFile(id, fileName);
+        UrlResource urlResource = new UrlResource("file:" + originalFullPath);
+        changeUTF8EncodingFile(originalFullPath, uploadFile);
 
-        String originalName = findOriginalName(id, fileName);
-        String encodeUploadFileName = UriUtils.encode(originalName, "UTF-8");
+        String downloadFileName = uploadFile.getOriginalName() + "_eucKr" + "." + uploadFile.getExtendedName();
+        String encodeUploadFileName = UriUtils.encode(downloadFileName, StandardCharsets.UTF_8);
 
         String contentDisposition = "attachment; fileName = \"" + encodeUploadFileName + "\"";
         return ResponseEntity.ok()
@@ -94,9 +98,9 @@ public class ItemController {
                 .body(urlResource);
     }
 
-    private void changeUTF8EncodingFile(String saveFileFullPath, String fileName) throws IOException {
 
-        String eucKrFullPath = fileStoreService.getFullPath(fileName); //euc_kr 변환파일 저장 경로
+    private void changeUTF8EncodingFile(String saveFileFullPath, UploadFile uploadFile) throws IOException {
+        String eucKrFullPath = fileStoreService.getFullPath(uploadFile.getSaveName()); //euc_kr 변환파일 저장 경로
 
         //원본 파일 경로
         File file = new File(saveFileFullPath);
@@ -105,31 +109,40 @@ public class ItemController {
         //UTF-8 to EUC-KR
         byte[] bytes = inputStream.readAllBytes();
 
-        for (byte aByte : bytes) {
-            log.info(aByte+" ");
-        }
         //UTF-8로 decode한다.
         String beforeConvertedText = new String(bytes, StandardCharsets.UTF_8);
         String afterConvertedText = new String(beforeConvertedText.getBytes(Charset.forName("EUC-KR")), Charset.forName("EUC-KR"));
         log.info("beforeConvertedText = {}", beforeConvertedText);
         log.info("afterConvertedText = {}", afterConvertedText);
-        log.info("eucKr = {}" , Charset.forName("EUC-KR"));
-        File outputFile = new File(eucKrFullPath);
-        Writer writer = new OutputStreamWriter(new FileOutputStream(outputFile), Charset.forName("EUC-KR"));
-//        log.info("encoding 검사 outputFile: {}" , FileEncodingDe);
+        log.info("eucKr = {}", Charset.forName("EUC-KR"));
 
+        //파일 쓰기
+        File outputFile = new File(fileStoreService.getFullPath(uploadFile.getSaveName()+ "_eucKr."+ uploadFile.getExtendedName()));
+        Writer writer = new OutputStreamWriter(new FileOutputStream(outputFile), Charset.forName("EUC-KR"));
         writer.write(afterConvertedText);
         writer.close();
 
     }
 
 
-    private String findOriginalName(Long id, String fileName) {
+//    private UploadFile findOriginalName(Long id, String fileName) {
+//        Item item = itemRepository.findById(id);
+//        List<UploadFile> uploadFiles = item.getFiles();
+//        for (UploadFile uploadFile : uploadFiles) {
+//            if (uploadFile.fullSaveFileName().equals(fileName)) {
+//                return uploadFile.fullOriginalFileName();
+//            }
+//        }
+//        throw new IllegalArgumentException("파일 이름이 잘못되었습니다.");
+//    }
+
+
+    private UploadFile findUploadFile(Long id, String fileName) {
         Item item = itemRepository.findById(id);
         List<UploadFile> uploadFiles = item.getFiles();
         for (UploadFile uploadFile : uploadFiles) {
             if (uploadFile.fullSaveFileName().equals(fileName)) {
-                return uploadFile.fullOriginalFileName();
+                return uploadFile;
             }
         }
         throw new IllegalArgumentException("파일 이름이 잘못되었습니다.");

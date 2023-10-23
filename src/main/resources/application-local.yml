@@ -36,5 +36,5 @@ logging:
       org.apache.coyote.http11: debug
 
 file:
-#  dir: /Users/heeseoknoh/Documents/workspace/saveFile/
-    dir: C:\Users\HeeSeok\Documents\saveFile\
+  dir: /Users/heeseoknoh/Documents/workspace/saveFile/
+#    dir: C:\Users\HeeSeok\Documents\saveFile\
