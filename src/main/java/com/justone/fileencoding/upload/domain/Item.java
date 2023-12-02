@@ -1,15 +1,33 @@
 package com.justone.fileencoding.upload.domain;
 
-import lombok.Data;
+import com.justone.fileencoding.upload.enums.ItemStatus;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.util.List;
-
-@Data
-public class Item {
+@Entity
+@Table(name = "item")
+@Getter
+@Setter
+public class Item extends BaseEntity {
+    @Id
+    @Column(name = "item_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String saveName;
+
+    @Column(name = "member_id")
+    private Long memberId;
+
     private String originalName;
-    private List<UploadFile> files;
-    private List<UploadFile> eucKrFiles;
-    private String clientIp;
+    private String originalPath;
+    private String originalExtendType;
+
+    private String saveName;
+    private String savePath;
+    private String saveExtendType;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private ItemStatus status;
+
 }
