@@ -1,20 +1,13 @@
 package com.justone.fileencoding.upload.controller;
 
-import com.justone.fileencoding.upload.controller.dto.SaveItemRequest;
 import com.justone.fileencoding.upload.domain.Item;
 import com.justone.fileencoding.upload.domain.UploadFile;
-import com.justone.fileencoding.upload.repository.ItemRepository;
-import com.justone.fileencoding.upload.service.FileStoreService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -22,44 +15,41 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 @Slf4j
-@Controller
+@RestController
 @RequiredArgsConstructor
 public class ItemController {
     private static final Charset EUC_KR = Charset.forName("euc-kr");
-    private final ItemRepository itemRepository;
-    private final FileStoreService fileStoreService;
 
     @GetMapping("/items/new")
-    public String newItem(@ModelAttribute Item form) {
-        return "item-form";
+    public ModelAndView newItem(@ModelAttribute Item form) {
+        return new ModelAndView("item-form");
     }
 
 
-    @PostMapping("/items/new")
-    public String saveItem(@ModelAttribute SaveItemRequest form, RedirectAttributes redirectAttributes,
-                           HttpServletRequest request) throws IOException {
-
-        List<UploadFile> storeFiles = fileStoreService.storeFiles(form.getFiles());
-        String myIp = request.getRemoteAddr();
-        log.info("myIp = {}", myIp);
-        //db 저장
-        Item item = new Item();
-                itemRepository.save(item);
-        redirectAttributes.addAttribute("itemId", item.getId());
-
-        return "redirect:/items/{itemId}";
-    }
-
-    @GetMapping("/items/{id}")
-    public String items(@PathVariable Long id, Model model) {
-        log.info("items view 시작");
-        Item item = itemRepository.findById(id);
-        model.addAttribute("item", item);
-        return "item-view";
-    }
+//    @PostMapping("/items/new")
+//    public String saveItem(@ModelAttribute SaveItemRequest form, RedirectAttributes redirectAttributes,
+//                           HttpServletRequest request) throws IOException {
+//
+//        List<UploadFile> storeFiles = fileStoreService.storeFiles(form.getFiles());
+//        String myIp = request.getRemoteAddr();
+//        log.info("myIp = {}", myIp);
+//        //db 저장
+//        Item item = new Item();
+//                itemRepository.save(item);
+//        redirectAttributes.addAttribute("itemId", item.getId());
+//
+//        return "redirect:/items/{itemId}";
+//    }
+//
+//    @GetMapping("/items/{id}")
+//    public String items(@PathVariable Long id, Model model) {
+//        log.info("items view 시작");
+//        Item item = itemRepository.findById(id);
+//        model.addAttribute("item", item);
+//        return "item-view";
+//    }
 
 //    @GetMapping("/attach/{id}/{fileName}")
 //    public ResponseEntity<Resource> downloadAttach(@PathVariable Long id, @PathVariable String fileName) throws MalformedURLException {
@@ -99,7 +89,6 @@ public class ItemController {
 
         //UTF-8 to EUC-KR
         String eucKrText = new String(utf8Text.getBytes(), EUC_KR);
-
 
 
     }

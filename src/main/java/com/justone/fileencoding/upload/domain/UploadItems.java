@@ -8,7 +8,7 @@ import lombok.Setter;
 @Table(name = "upload_items")
 @Getter
 @Setter
-public class uploadItems extends BaseEntity {
+public class UploadItems extends BaseEntity {
     @Id
     @Column(name = "upload_items_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
